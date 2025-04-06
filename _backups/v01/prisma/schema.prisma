@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model User {
+  id                      String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                   String                 @unique @db.VarChar(255)
+  password_hash           String?                @db.VarChar(255)
+  first_name              String?                @db.VarChar(100)
+  last_name               String?                @db.VarChar(100)
+  profile_image           String?                @db.VarChar(255)
+  created_at              DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?              @default(now()) @db.Timestamptz(6)
+  is_active               Boolean?               @default(true)
+  metadata                Json?
+  audit_logs              AuditLog[]
+  sessions                Session[]
+  user_roles              UserRole[]
+  user_social_connections UserSocialConnection[]
+
+  @@map("users")
+}
+
+model SocialProvider {
+  id                      Int                    @id @default(autoincrement())
+  name                    String                 @unique @db.VarChar(50)
+  description             String?
+  is_active               Boolean?               @default(true)
+  user_social_connections UserSocialConnection[]
+
+  @@map("social_providers")
+}
+
+model UserSocialConnection {
+  id               String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String         @db.Uuid
+  provider_id      Int
+  provider_user_id String         @db.VarChar(255)
+  auth_data        Json
+  created_at       DateTime?      @default(now()) @db.Timestamptz(6)
+  last_used_at     DateTime?      @db.Timestamptz(6)
+  social_providers SocialProvider @relation(fields: [provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            User           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider_id, provider_user_id])
+  @@index([user_id], map: "idx_user_social_connections_user_id")
+  @@map("user_social_connections")
+}
+
+model Site {
+  id               String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  domain           String           @unique @db.VarChar(255)
+  name             String           @db.VarChar(100)
+  description      String?
+  is_active        Boolean?         @default(true)
+  settings         Json?
+  created_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  pages            Page[]
+  role_permissions RolePermission[]
+  roles            Role[]
+  user_roles       UserRole[]
+
+  @@map("sites")
+}
+
+model Page {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  site_id     String  @db.Uuid
+  path        String  @db.VarChar(255)
+  name        String  @db.VarChar(100)
+  description String?
+  metadata    Json?
+  sites       Site    @relation(fields: [site_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([site_id, path])
+  @@index([site_id], map: "idx_pages_site_id")
+  @@map("pages")
+}
+
+model Role {
+  id               Int              @id @default(autoincrement())
+  name             String           @db.VarChar(50)
+  description      String?
+  site_id          String?          @db.Uuid
+  role_permissions RolePermission[]
+  sites            Site?            @relation(fields: [site_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_roles       UserRole[]
+
+  @@unique([name, site_id])
+  @@map("roles")
+}
+
+model Permission {
+  id               Int              @id @default(autoincrement())
+  code             String           @unique @db.VarChar(50)
+  name             String           @db.VarChar(100)
+  description      String?
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role_id           Int
+  permission_id     Int
+  site_id           String?    @db.Uuid
+  effective_site_id String     @default(dbgenerated("COALESCE(site_id, '00000000-0000-0000-0000-000000000000'::uuid)")) @db.Uuid
+  permissions       Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  roles             Role       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sites             Site?      @relation(fields: [site_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([role_id, permission_id, effective_site_id])
+  @@index([role_id], map: "idx_role_permissions_role_id")
+  @@map("role_permissions")
+}
+
+model UserRole {
+  user_id           String    @db.Uuid
+  role_id           Int
+  site_id           String?   @db.Uuid
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  effective_site_id String    @default(dbgenerated("COALESCE(site_id, '00000000-0000-0000-0000-000000000000'::uuid)")) @db.Uuid
+  roles             Role      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sites             Site?     @relation(fields: [site_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users             User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, role_id, effective_site_id])
+  @@index([user_id], map: "idx_user_roles_user_id")
+  @@map("user_roles")
+}
+
+model Session {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id        String    @db.Uuid
+  token          String    @unique @db.VarChar(255)
+  expires_at     DateTime  @db.Timestamptz(6)
+  ip_address     String?   @db.VarChar(45)
+  user_agent     String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  last_active_at DateTime? @default(now()) @db.Timestamptz(6)
+  users          User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_sessions_expires_at")
+  @@index([user_id], map: "idx_sessions_user_id")
+  @@map("sessions")
+}
+
+model AuditLog {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  action     String    @db.VarChar(100)
+  timestamp  DateTime? @default(now()) @db.Timestamptz(6)
+  ip_address String?   @db.VarChar(45)
+  details    Json?
+  users      User?     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([timestamp], map: "idx_audit_logs_timestamp")
+  @@index([user_id], map: "idx_audit_logs_user_id")
+  @@map("audit_logs")
+}
