@@ -4,7 +4,7 @@ import { UserUpdateInput, UserPasswordUpdateInput, Context } from '../../types';
 import { isAdmin } from '../../utils/permissions';
 
 // 사용자 목록 조회
-const users = async (_: any, { skip = 0, take = 50 }: { skip?: number; take?: number }, context: Context) => {
+const users = async (_: any, { skip = 0, take = 50, search }: { skip?: number; take?: number; search?: string }, context: Context) => {
   // 관리자만 모든 사용자 조회 가능
   if (!context.user) {
     throw new Error('인증이 필요합니다.');
@@ -15,7 +15,18 @@ const users = async (_: any, { skip = 0, take = 50 }: { skip?: number; take?: nu
     throw new Error('접근 권한이 없습니다.');
   }
 
+  const where = search
+    ? {
+        OR: [
+          { email: { contains: search } },
+          { first_name: { contains: search } },
+          { last_name: { contains: search } },
+        ],
+      }
+    : {};
+
   return prisma.user.findMany({
+    where,
     skip,
     take,
     orderBy: { created_at: 'desc' },
@@ -23,7 +34,7 @@ const users = async (_: any, { skip = 0, take = 50 }: { skip?: number; take?: nu
 };
 
 // 사용자 수 조회
-const userCount = async (_: any, __: any, context: Context) => {
+const userCount = async (_: any, { search }: { search?: string }, context: Context) => {
   // 관리자만 사용자 수 조회 가능
   if (!context.user) {
     throw new Error('인증이 필요합니다.');
@@ -34,7 +45,17 @@ const userCount = async (_: any, __: any, context: Context) => {
     throw new Error('접근 권한이 없습니다.');
   }
 
-  return prisma.user.count();
+  const where = search
+    ? {
+        OR: [
+          { email: { contains: search } },
+          { first_name: { contains: search } },
+          { last_name: { contains: search } },
+        ],
+      }
+    : {};
+
+  return prisma.user.count({ where });
 };
 
 // 특정 사용자 조회

@@ -1,23 +1,34 @@
 import { prisma } from '../../db';
 import { checkAuthentication } from '../../utils/auth';
 import { Context } from '../../types';
+import { isAdmin } from '../../utils/permissions';
 
 export const permissionResolvers = {
   Query: {
-    permissions: async (_: any, __: any, context: Context) => {
-      try {
-        await checkAuthentication(context);
-        
-        const permissions = await prisma.permission.findMany({
-          orderBy: {
-            name: 'asc',
-          },
-        });
-        
-        return permissions;
-      } catch (error: any) {
-        throw new Error(error.message);
+    permissions: async (_: any, { search }: { search?: string }, context: Context) => {
+      if (!context.user) {
+        throw new Error('인증이 필요합니다.');
       }
+
+      const isUserAdmin = await isAdmin(context.user.id);
+      if (!isUserAdmin) {
+        throw new Error('접근 권한이 없습니다.');
+      }
+
+      const where = search
+        ? {
+            OR: [
+              { code: { contains: search } },
+              { name: { contains: search } },
+              { description: { contains: search } },
+            ],
+          }
+        : {};
+
+      return prisma.permission.findMany({
+        where,
+        orderBy: { code: 'asc' },
+      });
     },
     
     permission: async (_: any, { id }: { id: string }, context: Context) => {

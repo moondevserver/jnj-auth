@@ -3,6 +3,7 @@ import * as auth from './auth';
 import * as user from './user';
 import * as site from './site';
 import { permissionResolvers } from './permission';
+import * as socialProvider from './social-provider';
 
 // 리졸버 맵 정의
 export const resolvers = {
@@ -28,6 +29,10 @@ export const resolvers = {
     
     // 권한 관련 쿼리
     ...permissionResolvers.Query,
+
+    // 소셜 프로바이더 관련 쿼리
+    socialProvider: socialProvider.socialProvider,
+    socialProviders: socialProvider.socialProviders,
   },
 
   // 뮤테이션 리졸버
@@ -57,5 +62,10 @@ export const resolvers = {
     
     // 권한 관련 뮤테이션
     ...permissionResolvers.Mutation,
+
+    // 소셜 프로바이더 관련 뮤테이션
+    createSocialProvider: socialProvider.createSocialProvider,
+    updateSocialProvider: socialProvider.updateSocialProvider,
+    deleteSocialProvider: socialProvider.deleteSocialProvider,
   },
 }; 

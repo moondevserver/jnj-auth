@@ -31,6 +31,8 @@ export const typeDefs = `#graphql
     provider_user_id: String!
     created_at: DateTime!
     last_used_at: DateTime
+    users: User!
+    auth_data: JSON
   }
 
   type SocialProvider {
@@ -38,6 +40,8 @@ export const typeDefs = `#graphql
     name: String!
     description: String
     is_active: Boolean!
+    settings: JSON
+    user_social_connections: [UserSocialConnection!]
   }
 
   # 권한 관련 타입
@@ -198,6 +202,13 @@ export const typeDefs = `#graphql
     metadata: JSON
   }
 
+  input SocialProviderInput {
+    name: String!
+    description: String
+    is_active: Boolean
+    settings: JSON
+  }
+
   # 쿼리 타입
   type Query {
     # 인증 관련 쿼리
@@ -205,23 +216,24 @@ export const typeDefs = `#graphql
     
     # 사용자 관련 쿼리
     user(id: ID!): User
-    users(skip: Int, take: Int): [User!]!
+    users(skip: Int, take: Int, search: String): [User!]!
     userCount: Int!
     
     # 소셜 인증 관련 쿼리
-    socialProviders: [SocialProvider!]!
+    socialProvider(id: Int!): SocialProvider
+    socialProviders(search: String): [SocialProvider!]!
     
     # 권한 관련 쿼리
     role(id: ID!): Role
-    roles(site_id: ID): [Role!]!
+    roles(site_id: ID, search: String): [Role!]!
     permission(id: ID!): Permission
-    permissions: [Permission!]!
+    permissions(search: String): [Permission!]!
     rolePermissions(roleId: ID, site_id: ID, pageId: ID): [RolePermission!]!
     userRoles(userId: ID, site_id: ID): [UserRole!]!
     
     # 사이트 및 페이지 관련 쿼리
     site(id: ID, domain: String): Site
-    sites(skip: Int, take: Int): [Site!]!
+    sites(skip: Int, take: Int, search: String): [Site!]!
     page(id: ID!): Page
     pages(site_id: ID!): [Page!]!
     
@@ -271,5 +283,10 @@ export const typeDefs = `#graphql
     createPage(input: PageInput!): Page!
     updatePage(id: ID!, input: PageInput!): Page!
     deletePage(id: ID!): Boolean!
+    
+    # 소셜 프로바이더 관련 뮤테이션
+    createSocialProvider(input: SocialProviderInput!): SocialProvider!
+    updateSocialProvider(id: Int!, input: SocialProviderInput!): SocialProvider!
+    deleteSocialProvider(id: Int!): Boolean!
   }
 `; 

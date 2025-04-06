@@ -31,6 +31,7 @@ model SocialProvider {
   name                    String                 @unique @db.VarChar(50)
   description             String?
   is_active               Boolean?               @default(true)
+  settings                Json?                  // 소셜 프로바이더별 설정값 (client_id, client_secret 등)
   user_social_connections UserSocialConnection[]
 
   @@map("social_providers")

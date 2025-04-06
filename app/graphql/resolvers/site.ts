@@ -22,15 +22,28 @@ const site = async (_: any, { id, domain }: { id?: string; domain?: string }, co
 };
 
 // 사이트 목록 조회
-const sites = async (_: any, { skip = 0, take = 50 }: { skip?: number; take?: number }, context: Context) => {
-  console.log('사이트 목록 조회 요청', { skip, take });
-  
+const sites = async (_: any, { skip = 0, take = 50, search }: { skip?: number; take?: number; search?: string }, context: Context) => {
+  if (!context.user) {
+    throw new Error('인증이 필요합니다.');
+  }
+
+  const where = search
+    ? {
+        OR: [
+          { domain: { contains: search } },
+          { name: { contains: search } },
+          { description: { contains: search } },
+        ],
+      }
+    : {};
+
   return prisma.site.findMany({
+    where,
     skip,
     take,
     orderBy: { created_at: 'desc' },
     include: {
-      pages: true, // pages 관계 포함
+      pages: true,
     },
   });
 };
