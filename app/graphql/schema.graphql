@@ -1,0 +1,34 @@
+type Query {
+  # 기존 쿼리들...
+  
+  # Permission 관련 쿼리
+  permissions: [Permission!]!
+  permission(id: ID!): Permission
+}
+
+type Mutation {
+  # 기존 뮤테이션들...
+  
+  # Permission 관련 뮤테이션
+  createPermission(input: PermissionInput!): Permission!
+  updatePermission(id: ID!, input: PermissionInput!): Permission!
+  deletePermission(id: ID!): DeleteResponse!
+}
+
+type Permission {
+  id: ID!
+  code: String!
+  name: String!
+  description: String
+}
+
+input PermissionInput {
+  code: String!
+  name: String!
+  description: String
+}
+
+type DeleteResponse {
+  success: Boolean!
+  message: String
+} 

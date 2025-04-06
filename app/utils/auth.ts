@@ -2,6 +2,7 @@ import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 import { prisma } from '../db';
 import { SignOptions } from 'jsonwebtoken';
+import { Context } from '../types';
 
 // 비밀번호 해싱
 const hashPassword = async (password: string): Promise<string> => {
@@ -162,6 +163,21 @@ const createAuditLog = async (
   }
 };
 
+// 인증 체크
+const checkAuthentication = async (context: Context): Promise<any> => {
+  const token = context.req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    throw new Error('인증이 필요합니다.');
+  }
+
+  const user = await validateSession(token);
+  if (!user) {
+    throw new Error('유효하지 않은 세션입니다.');
+  }
+
+  return user;
+};
+
 export {
   hashPassword,
   comparePassword,
@@ -172,4 +188,5 @@ export {
   validateSession,
   deleteSession,
   createAuditLog,
+  checkAuthentication,
 }; 

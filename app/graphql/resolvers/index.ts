@@ -2,6 +2,7 @@ import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
 import * as auth from './auth';
 import * as user from './user';
 import * as site from './site';
+import { permissionResolvers } from './permission';
 
 // 리졸버 맵 정의
 export const resolvers = {
@@ -25,7 +26,8 @@ export const resolvers = {
     page: site.page,
     pages: site.pages,
     
-    // TODO: 나머지 쿼리 리졸버 구현
+    // 권한 관련 쿼리
+    ...permissionResolvers.Query,
   },
 
   // 뮤테이션 리졸버
@@ -53,9 +55,7 @@ export const resolvers = {
     updatePage: site.updatePage,
     deletePage: site.deletePage,
     
-    // TODO: 나머지 뮤테이션 리졸버 구현
+    // 권한 관련 뮤테이션
+    ...permissionResolvers.Mutation,
   },
-
-  // 타입 리졸버
-  // TODO: 타입 리졸버 구현
 }; 
