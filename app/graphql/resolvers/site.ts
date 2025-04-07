@@ -1,3 +1,5 @@
+"use client";
+
 import { prisma } from '../../db';
 import { Context } from '../../types';
 
@@ -53,7 +55,7 @@ const page = async (_: any, { id }: { id: string }, context: Context) => {
   return prisma.page.findUnique({
     where: { id },
     include: {
-      site: true, // site 관계 포함
+      sites: true, // site 관계 포함
     },
   });
 };
@@ -63,7 +65,7 @@ const pages = async (_: any, { site_id }: { site_id: string }, context: Context)
   return prisma.page.findMany({
     where: { site_id },
     include: {
-      site: true, // site 관계 포함
+      sites: true, // site 관계 포함
     },
   });
 };
@@ -123,7 +125,6 @@ const deleteSite = async (_: any, { id }: { id: string }, context: Context) => {
 
 // 페이지 생성
 const createPage = async (_: any, { input }: { input: any }, context: Context) => {
-  // 권한 체크 로직 필요 (관리자만 페이지를 생성할 수 있음)
   if (!context.user) {
     throw new Error('인증이 필요합니다.');
   }
@@ -137,14 +138,13 @@ const createPage = async (_: any, { input }: { input: any }, context: Context) =
       metadata: input.metadata || {},
     },
     include: {
-      site: true,
+      sites: true,
     },
   });
 };
 
 // 페이지 수정
 const updatePage = async (_: any, { id, input }: { id: string; input: any }, context: Context) => {
-  // 권한 체크 로직 필요 (관리자만 페이지를 수정할 수 있음)
   if (!context.user) {
     throw new Error('인증이 필요합니다.');
   }
@@ -158,7 +158,7 @@ const updatePage = async (_: any, { id, input }: { id: string; input: any }, con
       metadata: input.metadata,
     },
     include: {
-      site: true,
+      sites: true,
     },
   });
 };

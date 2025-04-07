@@ -2,6 +2,7 @@ import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
 import * as auth from './auth';
 import * as user from './user';
 import * as site from './site';
+import * as role from './role';
 import { permissionResolvers } from './permission';
 import * as socialProvider from './social-provider';
 
@@ -27,6 +28,10 @@ export const resolvers = {
     page: site.page,
     pages: site.pages,
     
+    // 역할 관련 쿼리
+    role: role.role,
+    roles: role.roles,
+
     // 권한 관련 쿼리
     ...permissionResolvers.Query,
 
@@ -60,6 +65,11 @@ export const resolvers = {
     updatePage: site.updatePage,
     deletePage: site.deletePage,
     
+    // 역할 관련 뮤테이션
+    createRole: role.createRole,
+    updateRole: role.updateRole,
+    deleteRole: role.deleteRole,
+
     // 권한 관련 뮤테이션
     ...permissionResolvers.Mutation,
 
